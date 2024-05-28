@@ -1,0 +1,106 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: AWS SAM CLI Nested Stack for Auto Dependency Layer Creation
+Metadata:
+  SamCliInfo: 1.109.0
+  key: AWS SAM CLI sync command
+Outputs:
+  FetchAllAssessmentsFunctiond7cf1ab9DepLayer:
+    Value:
+      Ref: FetchAllAssessmentsFunctiond7cf1ab9DepLayer
+  FetchAssessmentFunction9fd2cad4DepLayer:
+    Value:
+      Ref: FetchAssessmentFunction9fd2cad4DepLayer
+  GradingFunctionc0c8ec5cDepLayer:
+    Value:
+      Ref: GradingFunctionc0c8ec5cDepLayer
+  PercentageLambda5b0951b6DepLayer:
+    Value:
+      Ref: PercentageLambda5b0951b6DepLayer
+  StoringLambda19d28275DepLayer:
+    Value:
+      Ref: StoringLambda19d28275DepLayer
+  TriggerS3Lambdab2f76cc6DepLayer:
+    Value:
+      Ref: TriggerS3Lambdab2f76cc6DepLayer
+  ValidateLambda8c394c47DepLayer:
+    Value:
+      Ref: ValidateLambda8c394c47DepLayer
+Resources:
+  FetchAllAssessmentsFunctiond7cf1ab9DepLayer:
+    Metadata:
+      CreatedBy: AWS SAM CLI sync command
+    Properties:
+      CompatibleRuntimes:
+      - python3.10
+      ContentUri: C:\Users\itsga\Desktop\AntStack-Task\student-tracker\.aws-sam\auto-dependency-layer\FetchAllAssessmentsFunctiond7cf1ab9DepLayer
+      Description: Auto created layer for dependencies of function FetchAllAssessmentsFunction
+      LayerName: student-tracker29042ad6-FetchAllAssessmentsFund7cf1ab9-DepLayer
+      RetentionPolicy: Delete
+    Type: AWS::Serverless::LayerVersion
+  FetchAssessmentFunction9fd2cad4DepLayer:
+    Metadata:
+      CreatedBy: AWS SAM CLI sync command
+    Properties:
+      CompatibleRuntimes:
+      - python3.10
+      ContentUri: C:\Users\itsga\Desktop\AntStack-Task\student-tracker\.aws-sam\auto-dependency-layer\FetchAssessmentFunction9fd2cad4DepLayer
+      Description: Auto created layer for dependencies of function FetchAssessmentFunction
+      LayerName: student-tracker29042ad6-FetchAssessmentFunctio9fd2cad4-DepLayer
+      RetentionPolicy: Delete
+    Type: AWS::Serverless::LayerVersion
+  GradingFunctionc0c8ec5cDepLayer:
+    Metadata:
+      CreatedBy: AWS SAM CLI sync command
+    Properties:
+      CompatibleRuntimes:
+      - python3.10
+      ContentUri: C:\Users\itsga\Desktop\AntStack-Task\student-tracker\.aws-sam\auto-dependency-layer\GradingFunctionc0c8ec5cDepLayer
+      Description: Auto created layer for dependencies of function GradingFunction
+      LayerName: student-tracker29042ad6-GradingFunctionc0c8ec5c-DepLayer
+      RetentionPolicy: Delete
+    Type: AWS::Serverless::LayerVersion
+  PercentageLambda5b0951b6DepLayer:
+    Metadata:
+      CreatedBy: AWS SAM CLI sync command
+    Properties:
+      CompatibleRuntimes:
+      - python3.10
+      ContentUri: C:\Users\itsga\Desktop\AntStack-Task\student-tracker\.aws-sam\auto-dependency-layer\PercentageLambda5b0951b6DepLayer
+      Description: Auto created layer for dependencies of function PercentageLambda
+      LayerName: student-tracker29042ad6-PercentageLambda5b0951b6-DepLayer
+      RetentionPolicy: Delete
+    Type: AWS::Serverless::LayerVersion
+  StoringLambda19d28275DepLayer:
+    Metadata:
+      CreatedBy: AWS SAM CLI sync command
+    Properties:
+      CompatibleRuntimes:
+      - python3.10
+      ContentUri: C:\Users\itsga\Desktop\AntStack-Task\student-tracker\.aws-sam\auto-dependency-layer\StoringLambda19d28275DepLayer
+      Description: Auto created layer for dependencies of function StoringLambda
+      LayerName: student-tracker29042ad6-StoringLambda19d28275-DepLayer
+      RetentionPolicy: Delete
+    Type: AWS::Serverless::LayerVersion
+  TriggerS3Lambdab2f76cc6DepLayer:
+    Metadata:
+      CreatedBy: AWS SAM CLI sync command
+    Properties:
+      CompatibleRuntimes:
+      - python3.10
+      ContentUri: C:\Users\itsga\Desktop\AntStack-Task\student-tracker\.aws-sam\auto-dependency-layer\TriggerS3Lambdab2f76cc6DepLayer
+      Description: Auto created layer for dependencies of function TriggerS3Lambda
+      LayerName: student-tracker29042ad6-TriggerS3Lambdab2f76cc6-DepLayer
+      RetentionPolicy: Delete
+    Type: AWS::Serverless::LayerVersion
+  ValidateLambda8c394c47DepLayer:
+    Metadata:
+      CreatedBy: AWS SAM CLI sync command
+    Properties:
+      CompatibleRuntimes:
+      - python3.10
+      ContentUri: C:\Users\itsga\Desktop\AntStack-Task\student-tracker\.aws-sam\auto-dependency-layer\ValidateLambda8c394c47DepLayer
+      Description: Auto created layer for dependencies of function ValidateLambda
+      LayerName: student-tracker29042ad6-ValidateLambda8c394c47-DepLayer
+      RetentionPolicy: Delete
+    Type: AWS::Serverless::LayerVersion
+Transform: AWS::Serverless-2016-10-31

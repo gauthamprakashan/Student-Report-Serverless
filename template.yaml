@@ -1,0 +1,290 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  student-tracker
+  Sample SAM Template for student-tracker
+
+
+Resources:
+
+  PresignS3:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        IgnorePublicAcls: false
+        BlockPublicPolicy: false
+        RestrictPublicBuckets: false
+        
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerPreferred
+
+
+  PresignS3BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref PresignS3
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          # - Effect: Allow
+          #   Principal: '*'
+          #   Action: 's3:GetObject'
+          #   Resource: !Sub 'arn:aws:s3:::PresignS3-${AWS::AccountId}/*'
+
+          - Effect: 'Allow'
+            Principal: '*'
+            Action: 's3:PutObject'
+            Resource: !Sub 'arn:aws:s3:::PresignS3-${AWS::AccountId}/*'
+            Condition:
+              StringLike:
+                's3:suffix': '*.csv'
+
+          - Effect: 'Deny'
+            Principal: '*'
+            Action: 's3:PutObject'
+            Resource: !Sub 'arn:aws:s3:::PresignS3-${AWS::AccountId}/*'
+            Condition:
+              StringNotLike:
+                's3:suffix': '*.csv'
+
+  MyLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: s3-full-access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: VisualEditor1
+                Effect: Allow
+                Action:
+                  - "s3:*"
+                  - "s3-object-lambda:*"
+                Resource: "*"
+        - PolicyName: dynamodb-get-Student
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: VisualEditor0
+                Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:Scan
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                Resource: arn:aws:dynamodb:us-east-1:960351580303:table/Student_details
+  TriggerS3Lambda:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      CodeUri: student_tracker/
+      Handler: TriggerS3.lambda_handler
+      Runtime: python3.10
+      Policies:
+        - AmazonS3ReadOnlyAccess
+        - AmazonDynamoDBFullAccess
+        - AWSStepFunctionsConsoleFullAccess
+        - AWSStepFunctionsFullAccess #add dynamo-db full acess and dynamodb-get item
+      Environment:
+        Variables:
+          STATE_MACHINE_ARN: !Ref MyStateMachine
+      Events:
+        S3UploadEvent:
+          Type: S3
+          Properties:
+            Bucket: !Ref PresignS3
+            Events: s3:ObjectCreated:*
+      
+      # Role: 
+      #   !GetAtt MyLambdaExecutionRole.Arn
+  
+  ValidateLambda:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: student_tracker/
+      Handler: Validate.lambda_handler
+      Runtime: python3.10
+      Policies:
+        - AmazonS3ReadOnlyAccess
+        - AmazonDynamoDBFullAccess
+      Architectures:
+      - x86_64
+      Role: 
+        !GetAtt MyLambdaExecutionRole.Arn
+
+  PercentageLambda:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: student_tracker/
+      Handler: Percentage.lambda_handler
+      Runtime: python3.10
+      Architectures:
+      - x86_64
+      Role: 
+        !GetAtt MyLambdaExecutionRole.Arn
+
+
+  GradingFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: student_tracker/
+      Handler: Grade.lambda_handler
+      Runtime: python3.10
+      Policies:
+        - AmazonS3ReadOnlyAccess
+      Architectures:
+      - x86_64
+      Role: 
+        !GetAtt MyLambdaExecutionRole.Arn
+  
+  StoringLambda:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: student_tracker/
+      Handler: Store.lambda_handler
+      Runtime: python3.10
+      Policies:
+        - AmazonS3ReadOnlyAccess
+      Architectures:
+      - x86_64
+      Role: 
+        !GetAtt MyLambdaExecutionRole.Arn
+
+  FetchAllAssessmentsFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: fetch_all_assesments.lambda_handler
+      Runtime: python3.10
+      CodeUri: api/
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - AmazonDynamoDBReadOnlyAccess
+      Role: 
+        !GetAtt MyLambdaExecutionRole.Arn
+      Events:
+        FetchAllAssessmentsApi:
+          Type: Api
+          Properties:
+            Path: /all_assessments
+            Method: get
+
+  FetchAssessmentFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: fetch_assesment.lambda_handler
+      Runtime: python3.10
+      CodeUri: api/
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - AmazonDynamoDBReadOnlyAccess
+      Role: 
+        !GetAtt MyLambdaExecutionRole.Arn
+      Events:
+        FetchAllAssessmentsApi:
+          Type: Api
+          Properties:
+            Path: /assessment
+            Method: get  
+  
+
+
+  
+  StepFunctionsExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: states.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: StepFunctionsPermissions
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: StepFunctionsLambdaInvoke
+                Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource: '*'
+
+  MyStateMachine:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      RoleArn: 
+        !GetAtt StepFunctionsExecutionRole.Arn
+      DefinitionString: 
+        Fn::Sub: |
+          {
+            "Comment": "Student Details task",
+            "StartAt": "Validate",
+            "States": {
+              "Validate": {
+                "Type": "Task",
+                "Resource": "${ValidateLambda.Arn}",
+                "Parameters": {
+                  "FunctionName": "${ValidateLambda.Arn}",
+                  "Payload": {
+                    "Input.$": "$"
+                  }
+                },
+                "Next": "Percentage"
+              },
+              "Percentage": {
+                "Type": "Task",
+                "Resource": "${PercentageLambda.Arn}",
+                "InputPath": "$.output1",
+                "Parameters": {
+                  "FunctionName": "${PercentageLambda.Arn}",
+                  "Payload": {
+                    "Input.$": "$"
+                  }
+                },
+                "Next": "Grade"
+              },
+              "Grade": {
+                "Type": "Task",
+                "Resource": "${GradingFunction.Arn}",
+                "InputPath": "$.output2",
+                "Parameters": {
+                  "FunctionName": "${GradingFunction.Arn}",
+                  "Payload": {
+                    "Input.$": "$"
+                  }
+                },
+                "Next": "Store"
+              },
+              "Store": {
+                "Type": "Task",
+                "Resource": "${StoringLambda.Arn}",
+                "InputPath": "$.output3",
+                "Parameters": {
+                  "FunctionName": "${StoringLambda.Arn}",
+                  "Payload": {
+                    "Input.$": "$"
+                  }
+                },
+                "Next": "NextState"
+              },
+              "NextState": {
+                "Type": "Pass",
+                "End": true
+              }
+            }
+          }
+Outputs:
+
+  ApiUrl:
+    Description: "URL for the API Gateway"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod"
+

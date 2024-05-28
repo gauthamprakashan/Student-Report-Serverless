@@ -1,0 +1,291 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: 'student-tracker Sample SAM Template for student-tracker
+
+  '
+Resources:
+  PresignS3:
+    Type: AWS::S3::Bucket
+    Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        IgnorePublicAcls: false
+        BlockPublicPolicy: false
+        RestrictPublicBuckets: false
+      OwnershipControls:
+        Rules:
+        - ObjectOwnership: BucketOwnerPreferred
+  PresignS3BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket:
+        Ref: PresignS3
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal: '*'
+          Action: s3:PutObject
+          Resource:
+            Fn::Sub: arn:aws:s3:::PresignS3-${AWS::AccountId}/*
+          Condition:
+            StringLike:
+              s3:suffix: '*.csv'
+        - Effect: Deny
+          Principal: '*'
+          Action: s3:PutObject
+          Resource:
+            Fn::Sub: arn:aws:s3:::PresignS3-${AWS::AccountId}/*
+          Condition:
+            StringNotLike:
+              s3:suffix: '*.csv'
+  MyLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      Policies:
+      - PolicyName: s3-full-access
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Sid: VisualEditor1
+            Effect: Allow
+            Action:
+            - s3:*
+            - s3-object-lambda:*
+            Resource: '*'
+      - PolicyName: dynamodb-get-Student
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Sid: VisualEditor0
+            Effect: Allow
+            Action:
+            - dynamodb:GetItem
+            - dynamodb:Scan
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            Resource: arn:aws:dynamodb:us-east-1:960351580303:table/Student_details
+  TriggerS3Lambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: TriggerS3Lambda
+      Handler: TriggerS3.lambda_handler
+      Runtime: python3.10
+      Policies:
+      - AmazonS3ReadOnlyAccess
+      - AmazonDynamoDBFullAccess
+      - AWSStepFunctionsConsoleFullAccess
+      - AWSStepFunctionsFullAccess
+      Environment:
+        Variables:
+          STATE_MACHINE_ARN:
+            Ref: MyStateMachine
+      Events:
+        S3UploadEvent:
+          Type: S3
+          Properties:
+            Bucket:
+              Ref: PresignS3
+            Events: s3:ObjectCreated:*
+      Layers:
+      - Fn::GetAtt:
+        - AwsSamAutoDependencyLayerNestedStack
+        - Outputs.TriggerS3Lambdab2f76cc6DepLayer
+    Metadata:
+      SamResourceId: TriggerS3Lambda
+  ValidateLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ValidateLambda
+      Handler: Validate.lambda_handler
+      Runtime: python3.10
+      Policies:
+      - AmazonS3ReadOnlyAccess
+      - AmazonDynamoDBFullAccess
+      Architectures:
+      - x86_64
+      Role:
+        Fn::GetAtt:
+        - MyLambdaExecutionRole
+        - Arn
+      Layers:
+      - Fn::GetAtt:
+        - AwsSamAutoDependencyLayerNestedStack
+        - Outputs.ValidateLambda8c394c47DepLayer
+    Metadata:
+      SamResourceId: ValidateLambda
+  PercentageLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: PercentageLambda
+      Handler: Percentage.lambda_handler
+      Runtime: python3.10
+      Architectures:
+      - x86_64
+      Role:
+        Fn::GetAtt:
+        - MyLambdaExecutionRole
+        - Arn
+      Layers:
+      - Fn::GetAtt:
+        - AwsSamAutoDependencyLayerNestedStack
+        - Outputs.PercentageLambda5b0951b6DepLayer
+    Metadata:
+      SamResourceId: PercentageLambda
+  GradingFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: GradingFunction
+      Handler: Grade.lambda_handler
+      Runtime: python3.10
+      Policies:
+      - AmazonS3ReadOnlyAccess
+      Architectures:
+      - x86_64
+      Role:
+        Fn::GetAtt:
+        - MyLambdaExecutionRole
+        - Arn
+      Layers:
+      - Fn::GetAtt:
+        - AwsSamAutoDependencyLayerNestedStack
+        - Outputs.GradingFunctionc0c8ec5cDepLayer
+    Metadata:
+      SamResourceId: GradingFunction
+  StoringLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: StoringLambda
+      Handler: Store.lambda_handler
+      Runtime: python3.10
+      Policies:
+      - AmazonS3ReadOnlyAccess
+      Architectures:
+      - x86_64
+      Role:
+        Fn::GetAtt:
+        - MyLambdaExecutionRole
+        - Arn
+      Layers:
+      - Fn::GetAtt:
+        - AwsSamAutoDependencyLayerNestedStack
+        - Outputs.StoringLambda19d28275DepLayer
+    Metadata:
+      SamResourceId: StoringLambda
+  FetchAllAssessmentsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: fetch_all_assesments.lambda_handler
+      Runtime: python3.10
+      CodeUri: FetchAllAssessmentsFunction
+      Policies:
+      - AWSLambdaBasicExecutionRole
+      - AmazonDynamoDBReadOnlyAccess
+      Role:
+        Fn::GetAtt:
+        - MyLambdaExecutionRole
+        - Arn
+      Events:
+        FetchAllAssessmentsApi:
+          Type: Api
+          Properties:
+            Path: /all_assessments
+            Method: get
+      Layers:
+      - Fn::GetAtt:
+        - AwsSamAutoDependencyLayerNestedStack
+        - Outputs.FetchAllAssessmentsFunctiond7cf1ab9DepLayer
+    Metadata:
+      SamResourceId: FetchAllAssessmentsFunction
+  FetchAssessmentFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: fetch_assesment.lambda_handler
+      Runtime: python3.10
+      CodeUri: FetchAssessmentFunction
+      Policies:
+      - AWSLambdaBasicExecutionRole
+      - AmazonDynamoDBReadOnlyAccess
+      Role:
+        Fn::GetAtt:
+        - MyLambdaExecutionRole
+        - Arn
+      Events:
+        FetchAllAssessmentsApi:
+          Type: Api
+          Properties:
+            Path: /assessment
+            Method: get
+      Layers:
+      - Fn::GetAtt:
+        - AwsSamAutoDependencyLayerNestedStack
+        - Outputs.FetchAssessmentFunction9fd2cad4DepLayer
+    Metadata:
+      SamResourceId: FetchAssessmentFunction
+  StepFunctionsExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: states.amazonaws.com
+          Action: sts:AssumeRole
+      Policies:
+      - PolicyName: StepFunctionsPermissions
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Sid: StepFunctionsLambdaInvoke
+            Effect: Allow
+            Action:
+            - lambda:InvokeFunction
+            Resource: '*'
+  MyStateMachine:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      RoleArn:
+        Fn::GetAtt:
+        - StepFunctionsExecutionRole
+        - Arn
+      DefinitionString:
+        Fn::Sub: "{\n  \"Comment\": \"Student Details task\",\n  \"StartAt\": \"Validate\"\
+          ,\n  \"States\": {\n    \"Validate\": {\n      \"Type\": \"Task\",\n   \
+          \   \"Resource\": \"${ValidateLambda.Arn}\",\n      \"Parameters\": {\n\
+          \        \"FunctionName\": \"${ValidateLambda.Arn}\",\n        \"Payload\"\
+          : {\n          \"Input.$\": \"$\"\n        }\n      },\n      \"Next\":\
+          \ \"Percentage\"\n    },\n    \"Percentage\": {\n      \"Type\": \"Task\"\
+          ,\n      \"Resource\": \"${PercentageLambda.Arn}\",\n      \"InputPath\"\
+          : \"$.output1\",\n      \"Parameters\": {\n        \"FunctionName\": \"\
+          ${PercentageLambda.Arn}\",\n        \"Payload\": {\n          \"Input.$\"\
+          : \"$\"\n        }\n      },\n      \"Next\": \"Grade\"\n    },\n    \"\
+          Grade\": {\n      \"Type\": \"Task\",\n      \"Resource\": \"${GradingFunction.Arn}\"\
+          ,\n      \"InputPath\": \"$.output2\",\n      \"Parameters\": {\n      \
+          \  \"FunctionName\": \"${GradingFunction.Arn}\",\n        \"Payload\": {\n\
+          \          \"Input.$\": \"$\"\n        }\n      },\n      \"Next\": \"Store\"\
+          \n    },\n    \"Store\": {\n      \"Type\": \"Task\",\n      \"Resource\"\
+          : \"${StoringLambda.Arn}\",\n      \"InputPath\": \"$.output3\",\n     \
+          \ \"Parameters\": {\n        \"FunctionName\": \"${StoringLambda.Arn}\"\
+          ,\n        \"Payload\": {\n          \"Input.$\": \"$\"\n        }\n   \
+          \   },\n      \"Next\": \"NextState\"\n    },\n    \"NextState\": {\n  \
+          \    \"Type\": \"Pass\",\n      \"End\": true\n    }\n  }\n}\n"
+  AwsSamAutoDependencyLayerNestedStack:
+    DeletionPolicy: Delete
+    Metadata:
+      CreatedBy: AWS SAM CLI sync command
+    Properties:
+      TemplateURL: C:\Users\itsga\Desktop\AntStack-Task\student-tracker\.aws-sam\auto-dependency-layer\adl_nested_template.yaml
+    Type: AWS::CloudFormation::Stack
+Outputs:
+  ApiUrl:
+    Description: URL for the API Gateway
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod
