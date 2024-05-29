@@ -13,6 +13,9 @@ Outputs:
   GradingFunctionc0c8ec5cDepLayer:
     Value:
       Ref: GradingFunctionc0c8ec5cDepLayer
+  MyAuthFunction486394d9DepLayer:
+    Value:
+      Ref: MyAuthFunction486394d9DepLayer
   PercentageLambda5b0951b6DepLayer:
     Value:
       Ref: PercentageLambda5b0951b6DepLayer
@@ -57,6 +60,17 @@ Resources:
       ContentUri: C:\Users\itsga\Desktop\AntStack-Task\student-tracker\.aws-sam\auto-dependency-layer\GradingFunctionc0c8ec5cDepLayer
       Description: Auto created layer for dependencies of function GradingFunction
       LayerName: student-tracker29042ad6-GradingFunctionc0c8ec5c-DepLayer
+      RetentionPolicy: Delete
+    Type: AWS::Serverless::LayerVersion
+  MyAuthFunction486394d9DepLayer:
+    Metadata:
+      CreatedBy: AWS SAM CLI sync command
+    Properties:
+      CompatibleRuntimes:
+      - python3.10
+      ContentUri: C:\Users\itsga\Desktop\AntStack-Task\student-tracker\.aws-sam\auto-dependency-layer\MyAuthFunction486394d9DepLayer
+      Description: Auto created layer for dependencies of function MyAuthFunction
+      LayerName: student-tracker29042ad6-MyAuthFunction486394d9-DepLayer
       RetentionPolicy: Delete
     Type: AWS::Serverless::LayerVersion
   PercentageLambda5b0951b6DepLayer:

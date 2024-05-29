@@ -2,6 +2,17 @@
 
 [sync_state]
 dependency_layer = true
-latest_infra_sync_time = "2024-05-28T17:11:04.433853"
+latest_infra_sync_time = "2024-05-29T10:59:45.902391"
 
 [resource_sync_states]
+[resource_sync_states."AutoDependencyLayerParentSyncFlow:FetchAllAssessmentsFunction"]
+hash = "e213e7abc323fed09742749a62ddb6c29c29111eb6546509eec26122bb6f1989"
+sync_time = "2024-05-29T11:03:06.271337"
+
+[resource_sync_states."AutoDependencyLayerParentSyncFlow:FetchAssessmentFunction"]
+hash = "e213e7abc323fed09742749a62ddb6c29c29111eb6546509eec26122bb6f1989"
+sync_time = "2024-05-29T11:03:12.153072"
+
+[resource_sync_states."AutoDependencyLayerParentSyncFlow:MyAuthFunction"]
+hash = "e213e7abc323fed09742749a62ddb6c29c29111eb6546509eec26122bb6f1989"
+sync_time = "2024-05-29T11:03:00.202266"

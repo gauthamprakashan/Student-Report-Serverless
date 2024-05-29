@@ -3,6 +3,12 @@ Transform: AWS::Serverless-2016-10-31
 Description: >
   student-tracker
   Sample SAM Template for student-tracker
+Globals:
+    Api:
+        Cors:
+            AllowMethods: "'GET,POST,OPTIONS'"
+            AllowHeaders: "'content-type'"
+            AllowOrigin: "'*'"
 
 
 Resources:
@@ -161,7 +167,7 @@ Resources:
   FetchAllAssessmentsFunction:
     Type: 'AWS::Serverless::Function'
     Properties:
-      Handler: fetch_all_assesments.lambda_handler
+      Handler: fetch_all_assesment.lambda_handler
       Runtime: python3.10
       CodeUri: api/
       Policies:
@@ -174,7 +180,8 @@ Resources:
           Type: Api
           Properties:
             Path: /all_assessments
-            Method: get
+            Method: GET
+            RestApiId: !Ref FetchAllAssessmentAPI
 
   FetchAssessmentFunction:
     Type: 'AWS::Serverless::Function'
@@ -192,11 +199,48 @@ Resources:
           Type: Api
           Properties:
             Path: /assessment
-            Method: get  
+            Method: GET
+            RestApiId: !Ref FetchAssessmentAPI
+            
+
+  FetchAllAssessmentAPI:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      Auth:
+        DefaultAuthorizer: MyLambdaRequestAuthorizer
+        Authorizers: 
+          MyLambdaRequestAuthorizer:
+            FunctionPayloadType: REQUEST
+            FunctionArn: !GetAtt MyAuthFunction.Arn
+            Identity:
+              Headers:
+                - authorizationToken
+              ReauthorizeEvery: 100
+
+  FetchAssessmentAPI:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      Auth:
+        DefaultAuthorizer: MyLambdaRequestAuthorizer
+        Authorizers: 
+          MyLambdaRequestAuthorizer:
+            FunctionPayloadType: REQUEST
+            FunctionArn: !GetAtt MyAuthFunction.Arn
+            Identity:
+              Headers:
+                - authorizationToken
+              ReauthorizeEvery: 100
+
+  MyAuthFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      CodeUri: api/
+      Handler: auth.lambda_handler
+      Runtime: python3.10
   
 
-
-  
   StepFunctionsExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -282,9 +326,9 @@ Resources:
               }
             }
           }
-Outputs:
+# Outputs:
 
-  ApiUrl:
-    Description: "URL for the API Gateway"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod"
+#   ApiUrl:
+#     Description: "URL for the API Gateway"
+#     Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod"
 

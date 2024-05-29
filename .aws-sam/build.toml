@@ -17,6 +17,6 @@ architecture = "x86_64"
 handler = "fetch_all_assesments.lambda_handler"
 manifest_hash = ""
 packagetype = "Zip"
-functions = ["FetchAllAssessmentsFunction", "FetchAssessmentFunction"]
+functions = ["FetchAllAssessmentsFunction", "FetchAssessmentFunction", "MyAuthFunction"]
 
 [layer_build_definitions]

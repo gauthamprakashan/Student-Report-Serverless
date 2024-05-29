@@ -3,6 +3,12 @@ Transform: AWS::Serverless-2016-10-31
 Description: 'student-tracker Sample SAM Template for student-tracker
 
   '
+Globals:
+  Api:
+    Cors:
+      AllowMethods: '''GET,POST,OPTIONS'''
+      AllowHeaders: '''content-type'''
+      AllowOrigin: '''*'''
 Resources:
   PresignS3:
     Type: AWS::S3::Bucket
@@ -182,7 +188,7 @@ Resources:
   FetchAllAssessmentsFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: fetch_all_assesments.lambda_handler
+      Handler: fetch_all_assesment.lambda_handler
       Runtime: python3.10
       CodeUri: FetchAllAssessmentsFunction
       Policies:
@@ -197,7 +203,9 @@ Resources:
           Type: Api
           Properties:
             Path: /all_assessments
-            Method: get
+            Method: GET
+            RestApiId:
+              Ref: FetchAllAssessmentAPI
       Layers:
       - Fn::GetAtt:
         - AwsSamAutoDependencyLayerNestedStack
@@ -222,13 +230,61 @@ Resources:
           Type: Api
           Properties:
             Path: /assessment
-            Method: get
+            Method: GET
+            RestApiId:
+              Ref: FetchAssessmentAPI
       Layers:
       - Fn::GetAtt:
         - AwsSamAutoDependencyLayerNestedStack
         - Outputs.FetchAssessmentFunction9fd2cad4DepLayer
     Metadata:
       SamResourceId: FetchAssessmentFunction
+  FetchAllAssessmentAPI:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      Auth:
+        DefaultAuthorizer: MyLambdaRequestAuthorizer
+        Authorizers:
+          MyLambdaRequestAuthorizer:
+            FunctionPayloadType: REQUEST
+            FunctionArn:
+              Fn::GetAtt:
+              - MyAuthFunction
+              - Arn
+            Identity:
+              Headers:
+              - authorizationToken
+              ReauthorizeEvery: 100
+  FetchAssessmentAPI:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      Auth:
+        DefaultAuthorizer: MyLambdaRequestAuthorizer
+        Authorizers:
+          MyLambdaRequestAuthorizer:
+            FunctionPayloadType: REQUEST
+            FunctionArn:
+              Fn::GetAtt:
+              - MyAuthFunction
+              - Arn
+            Identity:
+              Headers:
+              - authorizationToken
+              ReauthorizeEvery: 100
+  MyAuthFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: MyAuthFunction
+      Handler: auth.lambda_handler
+      Runtime: python3.10
+      Layers:
+      - Fn::GetAtt:
+        - AwsSamAutoDependencyLayerNestedStack
+        - Outputs.MyAuthFunction486394d9DepLayer
+    Metadata:
+      SamResourceId: MyAuthFunction
   StepFunctionsExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -284,8 +340,3 @@ Resources:
     Properties:
       TemplateURL: C:\Users\itsga\Desktop\AntStack-Task\student-tracker\.aws-sam\auto-dependency-layer\adl_nested_template.yaml
     Type: AWS::CloudFormation::Stack
-Outputs:
-  ApiUrl:
-    Description: URL for the API Gateway
-    Value:
-      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod
