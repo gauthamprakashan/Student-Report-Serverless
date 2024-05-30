@@ -16,12 +16,18 @@ Outputs:
   MyAuthFunction486394d9DepLayer:
     Value:
       Ref: MyAuthFunction486394d9DepLayer
+  ParentSESLambda32fb7b40DepLayer:
+    Value:
+      Ref: ParentSESLambda32fb7b40DepLayer
   PercentageLambda5b0951b6DepLayer:
     Value:
       Ref: PercentageLambda5b0951b6DepLayer
   StoringLambda19d28275DepLayer:
     Value:
       Ref: StoringLambda19d28275DepLayer
+  TeacherSESLambdad5a7a537DepLayer:
+    Value:
+      Ref: TeacherSESLambdad5a7a537DepLayer
   TriggerS3Lambdab2f76cc6DepLayer:
     Value:
       Ref: TriggerS3Lambdab2f76cc6DepLayer
@@ -73,6 +79,17 @@ Resources:
       LayerName: student-tracker29042ad6-MyAuthFunction486394d9-DepLayer
       RetentionPolicy: Delete
     Type: AWS::Serverless::LayerVersion
+  ParentSESLambda32fb7b40DepLayer:
+    Metadata:
+      CreatedBy: AWS SAM CLI sync command
+    Properties:
+      CompatibleRuntimes:
+      - python3.10
+      ContentUri: C:\Users\itsga\Desktop\AntStack-Task\student-tracker\.aws-sam\auto-dependency-layer\ParentSESLambda32fb7b40DepLayer
+      Description: Auto created layer for dependencies of function ParentSESLambda
+      LayerName: student-tracker29042ad6-ParentSESLambda32fb7b40-DepLayer
+      RetentionPolicy: Delete
+    Type: AWS::Serverless::LayerVersion
   PercentageLambda5b0951b6DepLayer:
     Metadata:
       CreatedBy: AWS SAM CLI sync command
@@ -93,6 +110,17 @@ Resources:
       ContentUri: C:\Users\itsga\Desktop\AntStack-Task\student-tracker\.aws-sam\auto-dependency-layer\StoringLambda19d28275DepLayer
       Description: Auto created layer for dependencies of function StoringLambda
       LayerName: student-tracker29042ad6-StoringLambda19d28275-DepLayer
+      RetentionPolicy: Delete
+    Type: AWS::Serverless::LayerVersion
+  TeacherSESLambdad5a7a537DepLayer:
+    Metadata:
+      CreatedBy: AWS SAM CLI sync command
+    Properties:
+      CompatibleRuntimes:
+      - python3.10
+      ContentUri: C:\Users\itsga\Desktop\AntStack-Task\student-tracker\.aws-sam\auto-dependency-layer\TeacherSESLambdad5a7a537DepLayer
+      Description: Auto created layer for dependencies of function TeacherSESLambda
+      LayerName: student-tracker29042ad6-TeacherSESLambdad5a7a537-DepLayer
       RetentionPolicy: Delete
     Type: AWS::Serverless::LayerVersion
   TriggerS3Lambdab2f76cc6DepLayer:

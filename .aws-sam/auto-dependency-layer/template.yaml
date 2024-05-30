@@ -333,6 +333,134 @@ Resources:
           ,\n        \"Payload\": {\n          \"Input.$\": \"$\"\n        }\n   \
           \   },\n      \"Next\": \"NextState\"\n    },\n    \"NextState\": {\n  \
           \    \"Type\": \"Pass\",\n      \"End\": true\n    }\n  }\n}\n"
+  TeacherSESLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: TeacherSESLambda
+      Handler: teacher.lambda_handler
+      Runtime: python3.10
+      Architectures:
+      - x86_64
+      Role:
+        Fn::GetAtt:
+        - MyLambdaSESExecutionRole
+        - Arn
+      Events:
+        TeacherSESApiEvent:
+          Type: Api
+          Properties:
+            Path: /teacher
+            Method: GET
+            RestApiId:
+              Ref: TeacherSESAPI
+      Layers:
+      - Fn::GetAtt:
+        - AwsSamAutoDependencyLayerNestedStack
+        - Outputs.TeacherSESLambdad5a7a537DepLayer
+    Metadata:
+      SamResourceId: TeacherSESLambda
+  TeacherSESAPI:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      Auth:
+        DefaultAuthorizer: MyLambdaRequestAuthorizer
+        Authorizers:
+          MyLambdaRequestAuthorizer:
+            FunctionPayloadType: REQUEST
+            FunctionArn:
+              Fn::GetAtt:
+              - MyAuthFunction
+              - Arn
+            Identity:
+              Headers:
+              - authorizationToken
+              ReauthorizeEvery: 100
+  ParentSESLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ParentSESLambda
+      Handler: parents.lambda_handler
+      Runtime: python3.10
+      Architectures:
+      - x86_64
+      Role:
+        Fn::GetAtt:
+        - MyLambdaSESExecutionRole
+        - Arn
+      Events:
+        ParentSESApiEvent:
+          Type: Api
+          Properties:
+            Path: /parent
+            Method: GET
+            RestApiId:
+              Ref: ParentSESAPI
+      Layers:
+      - Fn::GetAtt:
+        - AwsSamAutoDependencyLayerNestedStack
+        - Outputs.ParentSESLambda32fb7b40DepLayer
+    Metadata:
+      SamResourceId: ParentSESLambda
+  ParentSESAPI:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      Auth:
+        DefaultAuthorizer: MyLambdaRequestAuthorizer
+        Authorizers:
+          MyLambdaRequestAuthorizer:
+            FunctionPayloadType: REQUEST
+            FunctionArn:
+              Fn::GetAtt:
+              - MyAuthFunction
+              - Arn
+            Identity:
+              Headers:
+              - authorizationToken
+              ReauthorizeEvery: 100
+  MyLambdaSESExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      Policies:
+      - PolicyName: s3-full-access
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Sid: VisualEditor1
+            Effect: Allow
+            Action:
+            - s3:*
+            - s3-object-lambda:*
+            Resource: '*'
+      - PolicyName: ses-full-access
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Sid: VisualEditor2
+            Effect: Allow
+            Action:
+            - ses:*
+            Resource: arn:aws:ses:us-east-1:960351580303:identity/gautham.prakashan@antstack.io
+      - PolicyName: dynamodb-get-Student
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Sid: VisualEditor0
+            Effect: Allow
+            Action:
+            - dynamodb:GetItem
+            - dynamodb:Scan
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            Resource: arn:aws:dynamodb:us-east-1:960351580303:table/Student_details
   AwsSamAutoDependencyLayerNestedStack:
     DeletionPolicy: Delete
     Metadata:

@@ -2,7 +2,7 @@
 
 [sync_state]
 dependency_layer = true
-latest_infra_sync_time = "2024-05-29T10:59:45.902391"
+latest_infra_sync_time = "2024-05-29T17:48:35.882878"
 
 [resource_sync_states]
 [resource_sync_states."AutoDependencyLayerParentSyncFlow:FetchAllAssessmentsFunction"]
@@ -16,3 +16,11 @@ sync_time = "2024-05-29T11:03:12.153072"
 [resource_sync_states."AutoDependencyLayerParentSyncFlow:MyAuthFunction"]
 hash = "e213e7abc323fed09742749a62ddb6c29c29111eb6546509eec26122bb6f1989"
 sync_time = "2024-05-29T11:03:00.202266"
+
+[resource_sync_states."AutoDependencyLayerParentSyncFlow:ParentSESLambda"]
+hash = "21937c9b1cf1c03aa60e7207ca540910f8c69531140e23bf3bda48f2e3695fe9"
+sync_time = "2024-05-29T18:53:31.609442"
+
+[resource_sync_states."AutoDependencyLayerParentSyncFlow:TeacherSESLambda"]
+hash = "21937c9b1cf1c03aa60e7207ca540910f8c69531140e23bf3bda48f2e3695fe9"
+sync_time = "2024-05-29T18:53:25.190040"

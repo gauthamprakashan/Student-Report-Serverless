@@ -19,4 +19,13 @@ manifest_hash = ""
 packagetype = "Zip"
 functions = ["FetchAllAssessmentsFunction", "FetchAssessmentFunction", "MyAuthFunction"]
 
+[function_build_definitions.455b87a2-d283-477f-944b-20d30289cc4d]
+codeuri = "C:\\Users\\itsga\\Desktop\\AntStack-Task\\student-tracker\\mail"
+runtime = "python3.10"
+architecture = "x86_64"
+handler = "teacher.lambda_handler"
+manifest_hash = ""
+packagetype = "Zip"
+functions = ["TeacherSESLambda", "ParentSESLambda"]
+
 [layer_build_definitions]

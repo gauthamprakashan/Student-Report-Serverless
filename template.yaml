@@ -326,6 +326,114 @@ Resources:
               }
             }
           }
+  TeacherSESLambda:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: mail/
+      Handler: teacher.lambda_handler
+      Runtime: python3.10
+      Architectures:
+      - x86_64
+      Role: 
+        !GetAtt MyLambdaSESExecutionRole.Arn
+      Events:
+        TeacherSESApiEvent:
+          Type: Api
+          Properties:
+            Path: /teacher
+            Method: GET
+            RestApiId: !Ref TeacherSESAPI
+  
+  TeacherSESAPI:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      Auth:
+        DefaultAuthorizer: MyLambdaRequestAuthorizer
+        Authorizers: 
+          MyLambdaRequestAuthorizer:
+            FunctionPayloadType: REQUEST
+            FunctionArn: !GetAtt MyAuthFunction.Arn
+            Identity:
+              Headers:
+                - authorizationToken
+              ReauthorizeEvery: 100
+
+  ParentSESLambda:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: mail/
+      Handler: parents.lambda_handler
+      Runtime: python3.10
+      Architectures:
+      - x86_64
+      Role: 
+        !GetAtt MyLambdaSESExecutionRole.Arn
+      Events:
+        ParentSESApiEvent:
+          Type: Api
+          Properties:
+            Path: /parent
+            Method: GET
+            RestApiId: !Ref ParentSESAPI
+
+  ParentSESAPI:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      Auth:
+        DefaultAuthorizer: MyLambdaRequestAuthorizer
+        Authorizers: 
+          MyLambdaRequestAuthorizer:
+            FunctionPayloadType: REQUEST
+            FunctionArn: !GetAtt MyAuthFunction.Arn
+            Identity:
+              Headers:
+                - authorizationToken
+              ReauthorizeEvery: 100
+
+  MyLambdaSESExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: s3-full-access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: VisualEditor1
+                Effect: Allow
+                Action:
+                  - "s3:*"
+                  - "s3-object-lambda:*"
+                Resource: "*"
+        - PolicyName: ses-full-access
+          PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Sid: VisualEditor2
+                  Effect: 'Allow'
+                  Action:
+                    - 'ses:*'
+                  Resource: arn:aws:ses:us-east-1:960351580303:identity/gautham.prakashan@antstack.io
+        - PolicyName: dynamodb-get-Student
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: VisualEditor0
+                Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:Scan
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                Resource: arn:aws:dynamodb:us-east-1:960351580303:table/Student_details
 # Outputs:
 
 #   ApiUrl:

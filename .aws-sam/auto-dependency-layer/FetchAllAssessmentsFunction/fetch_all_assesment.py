@@ -11,7 +11,7 @@ def lambda_handler(event, context):
     try:
         response = table.get_item(Key={'ID': student_id})
         print(response)
-        if 'Item' in response:
+        if 'Item' in response:#item or items?
             item = response['Item']
             assessments = {k: v for k, v in item.items() if k in assessments }
             return {
