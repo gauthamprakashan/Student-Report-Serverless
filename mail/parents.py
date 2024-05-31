@@ -34,10 +34,11 @@ def lambda_handler(event, context):
             
             item = response['Items'][0]
             print(type(item))
-            #retrive parents_email with get_item
             assessments = {k: v for k, v in item.items() if k in assessments }
 
             flattened_data = []
+
+            #Access data and flatten it from retrieved response from DynamoDB
             for assessment_name, scores in assessments.items():
                 row = {'Assessment': assessment_name}
                 row.update(scores)
@@ -50,10 +51,9 @@ def lambda_handler(event, context):
             
             csv_file_content = csv_file.getvalue()
     
-            # Upload the CSV file to S3
-            #s3_client.put_object(Body=csv_file_content, Bucket=bucket_name, Key=csv_file_key)
             
-
+            
+#           #Creating raw email in SES to send attachments
             msg = MIMEMultipart()
             msg['Subject'] = subject
             msg['From'] = FROM_EMAIL
@@ -90,7 +90,6 @@ def lambda_handler(event, context):
             }
     
         
-        # Send email to teachers
         
 
     except Exception as e:

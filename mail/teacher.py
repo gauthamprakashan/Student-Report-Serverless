@@ -23,14 +23,12 @@ def lambda_handler(event, context):
         subject = 'Assessment Details'
         
         # Retrieve the object data from DynamoDB
-        # ID = 'rh-37'
-        # expr = boto3.dynamodb.conditions.Key('ID').eq(ID)
-        # response = table.scan(FilterExpression=expr)
-        # print(response)
+        
 
         expr = Key('class').eq(class1)
         response = table.scan(FilterExpression=expr)
         assessments = ["Finalexam","Assement1","Assement2","Assement5","Assement6","Midterm","Assement3","Assement4"]
+        
         if 'Items' in response and 'Items'!= []:
             items = response['Items']
             flattened_data = []

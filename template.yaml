@@ -9,10 +9,10 @@ Globals:
             AllowMethods: "'GET,POST,OPTIONS'"
             AllowHeaders: "'content-type'"
             AllowOrigin: "'*'"
-
+    
 
 Resources:
-
+  #S3 bucket to upload files
   PresignS3:
     Type: 'AWS::S3::Bucket'
     Properties:
@@ -55,6 +55,7 @@ Resources:
               StringNotLike:
                 's3:suffix': '*.csv'
 
+  #Lambda IAM role for all the 4 lambda states
   MyLambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -88,6 +89,7 @@ Resources:
                   - dynamodb:PutItem
                   - dynamodb:UpdateItem
                 Resource: arn:aws:dynamodb:us-east-1:960351580303:table/Student_details
+
   TriggerS3Lambda:
     Type: 'AWS::Serverless::Function'
     Properties:
@@ -98,7 +100,7 @@ Resources:
         - AmazonS3ReadOnlyAccess
         - AmazonDynamoDBFullAccess
         - AWSStepFunctionsConsoleFullAccess
-        - AWSStepFunctionsFullAccess #add dynamo-db full acess and dynamodb-get item
+        - AWSStepFunctionsFullAccess 
       Environment:
         Variables:
           STATE_MACHINE_ARN: !Ref MyStateMachine
@@ -109,23 +111,23 @@ Resources:
             Bucket: !Ref PresignS3
             Events: s3:ObjectCreated:*
       
-      # Role: 
-      #   !GetAtt MyLambdaExecutionRole.Arn
-  
+
+  #Validates the data: State 1
   ValidateLambda:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
       CodeUri: student_tracker/
       Handler: Validate.lambda_handler
       Runtime: python3.10
-      Policies:
-        - AmazonS3ReadOnlyAccess
-        - AmazonDynamoDBFullAccess
+      # Policies: remove
+      #   - AmazonS3ReadOnlyAccess
+      #   - AmazonDynamoDBFullAccess
       Architectures:
       - x86_64
       Role: 
         !GetAtt MyLambdaExecutionRole.Arn
 
+  #Calculates Percentage State 2
   PercentageLambda:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
@@ -137,7 +139,7 @@ Resources:
       Role: 
         !GetAtt MyLambdaExecutionRole.Arn
 
-
+  #Calculates Grade State 3
   GradingFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
@@ -151,14 +153,14 @@ Resources:
       Role: 
         !GetAtt MyLambdaExecutionRole.Arn
   
+  #Stores in database State 4
   StoringLambda:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
       CodeUri: student_tracker/
       Handler: Store.lambda_handler
       Runtime: python3.10
-      Policies:
-        - AmazonS3ReadOnlyAccess
+      Timeout: 15
       Architectures:
       - x86_64
       Role: 
@@ -170,9 +172,9 @@ Resources:
       Handler: fetch_all_assesment.lambda_handler
       Runtime: python3.10
       CodeUri: api/
-      Policies:
-        - AWSLambdaBasicExecutionRole
-        - AmazonDynamoDBReadOnlyAccess
+      # Policies:
+      #   - AWSLambdaBasicExecutionRole
+      #   - AmazonDynamoDBReadOnlyAccess
       Role: 
         !GetAtt MyLambdaExecutionRole.Arn
       Events:
@@ -189,9 +191,9 @@ Resources:
       Handler: fetch_assesment.lambda_handler
       Runtime: python3.10
       CodeUri: api/
-      Policies:
-        - AWSLambdaBasicExecutionRole
-        - AmazonDynamoDBReadOnlyAccess
+      # Policies:
+      #   - AWSLambdaBasicExecutionRole
+      #   - AmazonDynamoDBReadOnlyAccess
       Role: 
         !GetAtt MyLambdaExecutionRole.Arn
       Events:
@@ -232,7 +234,7 @@ Resources:
               Headers:
                 - authorizationToken
               ReauthorizeEvery: 100
-
+  #Lambda Custom Authoriser for the all the API's
   MyAuthFunction:
     Type: 'AWS::Serverless::Function'
     Properties:
@@ -326,6 +328,8 @@ Resources:
               }
             }
           }
+
+  #Sends Email to Teacher with classes report card        
   TeacherSESLambda:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
@@ -359,6 +363,7 @@ Resources:
                 - authorizationToken
               ReauthorizeEvery: 100
 
+  #Send email to parents of childs report
   ParentSESLambda:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
@@ -391,7 +396,7 @@ Resources:
               Headers:
                 - authorizationToken
               ReauthorizeEvery: 100
-
+  #Lambda IAM Role for Mail APIs
   MyLambdaSESExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -434,9 +439,24 @@ Resources:
                   - dynamodb:PutItem
                   - dynamodb:UpdateItem
                 Resource: arn:aws:dynamodb:us-east-1:960351580303:table/Student_details
-# Outputs:
+Outputs:
+  ParentSESApiUrl:
+    Description: "API to notify Parent's about the Report "
+    Value: !Sub "https://${ParentSESAPI}.execute-api.${AWS::Region}.amazonaws.com/Prod/parent"
+  TeacherSESApiUrl:
+    Description: "API to notify Teacher's about the Report "
+    Value: !Sub "https://${TeacherSESAPI}.execute-api.${AWS::Region}.amazonaws.com/Prod/teacher/"
+  FetchAssessmentApiUrl:
+    Description: "API to fetch assessment details "
+    Value: !Sub "https://${FetchAssessmentAPI}.execute-api.${AWS::Region}.amazonaws.com/Prod/assessment"  # Replace with actual path
+  FetchAllAssessmentApiUrl:
+    Description: "API to fetch all assessment details "
+    Value: !Sub "https://${FetchAllAssessmentAPI}.execute-api.${AWS::Region}.amazonaws.com/Prod/all_assessments"  
+
 
 #   ApiUrl:
 #     Description: "URL for the API Gateway"
 #     Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod"
+
+
 

@@ -7,7 +7,7 @@ def lambda_handler(event, context):
     percentage = event['Payload']['Input'][1]
     for i in range(len(percentage)):
         grade = []
-
+        #Calculates grade and stores it in a list of lists
         for j in range(len(percentage[0])):
             if percentage[i][j] >= 70:
                 grade.append('A') 

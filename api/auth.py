@@ -10,16 +10,13 @@ def lambda_handler(event, context):
         return generate_policy('user', 'Deny', method_arn)
 
 def validate_token(token):
-    # Implement your token validation logic here
-    # For example, check the token against a known list or validate its signature
-    # This is a simple placeholder example
     valid_tokens = ['abc-123', 'xyz-456']  # Example valid tokens
     if token in valid_tokens:
         return True
     else:
         return False
 
-def generate_policy(principal_id, effect, resource):
+def generate_policy(principal_id, effect, resource):   #generates policy to allow or deny
     auth_response = {}
     auth_response['principalId'] = principal_id
     if effect and resource:

@@ -1,5 +1,5 @@
 import boto3
-import simplejson as json
+import simplejson as json  #use simplejson to to convert Decimal type into JSON
 from boto3.dynamodb.conditions import Key
 
 dynamodb = boto3.resource('dynamodb')

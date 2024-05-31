@@ -1,9 +1,9 @@
-import json
 import boto3
 import csv
 
 s3_client = boto3.client('s3')
 
+#Reformats CSV data from excel into Dictonary 
 def reformat_record(record, assessments):
     reformatted = {
         'ID': record['ID'],
@@ -21,7 +21,7 @@ def reformat_record(record, assessments):
 
 def lambda_handler(event, context):
     # Print the event for debugging purposes
-    print(event)
+    #print(event)
     
     # Access the required keys from the input event
     key = event['Payload']['Input']['object']['key']
@@ -37,10 +37,8 @@ def lambda_handler(event, context):
     # List of dictionaries to store the CSV data
     item_list = []
 
-    # List of assessments to consider
     assessments = ["Finalexam","Assement1","Assement2","Assement5","Assement6","Midterm","Assement3","Assement4"]
 
-    # Iterate over each row in the CSV data
     for assessment_record in csv_data:
         # Access data based on field names
         student_id = assessment_record.get('ID')
@@ -90,10 +88,10 @@ def lambda_handler(event, context):
     print(item_list)
     if not item_list:
         return {
-            'statusCode': 400,  # or any appropriate error status code
-            'body': "No valid data found"  # or any appropriate error message
+            'statusCode': 400,  
+            'body': "No valid data found"  
         }
-    # Convert the list of dictionaries to JSON
+    
     
     return {
         'statusCode': 200,
