@@ -7,7 +7,7 @@ This project contains source code and supporting files for a serverless applicat
 - api - API fetch function to retireve marks 
 - events - Invocation events that you can use to invoke the function.
 - template.yaml - A template that defines the application's AWS resources.
-- 
+  
 ## Deploy and Run the Student-Tracker application
 
 1. Clone the repositry on your local machine using git.
@@ -28,7 +28,8 @@ aws s3 cp "<Source-path>" s3://student-tracker-presigns3-jpcnxtpwieck/
 ## Test the API's of the Student-Tracker application
 1. All the API Endpoints are present in the Output Section of the Cloudformation Stack.
 2. They can be tested locally on Postman.
-3. The Parameters for the to test the API's are -
+3. "authorizationToken" header must be passed as header to validate api requests. A placeholder value "abc-123" should be given.
+4. The Parameters for the to test the API's are -
    - FetchAssessmentApiUrl : "ID" and "assessment"
    - FetchAllAssessmentApiUrl : "ID"
    - TeacherSESApiUrl : "class" and "teachers_email"
