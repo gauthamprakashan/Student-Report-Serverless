@@ -20,7 +20,7 @@ This project contains source code and supporting files for a serverless applicat
 sam build 
 sam deploy --guided
 ```
-3. Student Database has been Created based on student_personal_details.csv and can be found here https://us-east-1.console.aws.amazon.com/dynamodbv2/home?region=us-east-1#table?name=Student_details . The appropriate Schema has been defined according to students_assessment_details.csv
+3. Student Database has been Created based on student_personal_details.csv and can be found here https://us-east-1.console.aws.amazon.com/dynamodbv2/home?region=us-east-1#table?name=Student_details . The appropriate Schema has been defined according to students_assessment_details.csv. (student assesment details files are present in the TestCases folder).
 4. To trigger the State Machine we upload the desired assessment file into the s3 bucket using AWS CLI
    
 ```bash
