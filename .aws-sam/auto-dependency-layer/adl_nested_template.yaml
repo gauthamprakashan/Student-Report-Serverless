@@ -31,6 +31,9 @@ Outputs:
   TriggerS3Lambdab2f76cc6DepLayer:
     Value:
       Ref: TriggerS3Lambdab2f76cc6DepLayer
+  UploadCSVLambdaafa4c99cDepLayer:
+    Value:
+      Ref: UploadCSVLambdaafa4c99cDepLayer
   ValidateLambda8c394c47DepLayer:
     Value:
       Ref: ValidateLambda8c394c47DepLayer
@@ -132,6 +135,17 @@ Resources:
       ContentUri: C:\Users\itsga\Desktop\AntStack-Task\student-tracker\.aws-sam\auto-dependency-layer\TriggerS3Lambdab2f76cc6DepLayer
       Description: Auto created layer for dependencies of function TriggerS3Lambda
       LayerName: student-tracker29042ad6-TriggerS3Lambdab2f76cc6-DepLayer
+      RetentionPolicy: Delete
+    Type: AWS::Serverless::LayerVersion
+  UploadCSVLambdaafa4c99cDepLayer:
+    Metadata:
+      CreatedBy: AWS SAM CLI sync command
+    Properties:
+      CompatibleRuntimes:
+      - python3.10
+      ContentUri: C:\Users\itsga\Desktop\AntStack-Task\student-tracker\.aws-sam\auto-dependency-layer\UploadCSVLambdaafa4c99cDepLayer
+      Description: Auto created layer for dependencies of function UploadCSVLambda
+      LayerName: student-tracker29042ad6-UploadCSVLambdaafa4c99c-DepLayer
       RetentionPolicy: Delete
     Type: AWS::Serverless::LayerVersion
   ValidateLambda8c394c47DepLayer:

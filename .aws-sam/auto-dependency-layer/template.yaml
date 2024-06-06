@@ -106,15 +106,38 @@ Resources:
         - Outputs.TriggerS3Lambdab2f76cc6DepLayer
     Metadata:
       SamResourceId: TriggerS3Lambda
+  UploadCSVLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: UploadCSVLambda
+      Handler: load.lambda_handler
+      Runtime: python3.10
+      Architectures:
+      - x86_64
+      Environment:
+        Variables:
+          BUCKET_NAME:
+            Ref: PresignS3
+      Events:
+        UplaodCSVApi:
+          Type: Api
+          Properties:
+            Path: /upload
+            Method: GET
+            RestApiId:
+              Ref: APIGateWay
+      Layers:
+      - Fn::GetAtt:
+        - AwsSamAutoDependencyLayerNestedStack
+        - Outputs.UploadCSVLambdaafa4c99cDepLayer
+    Metadata:
+      SamResourceId: UploadCSVLambda
   ValidateLambda:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ValidateLambda
       Handler: Validate.lambda_handler
       Runtime: python3.10
-      Policies:
-      - AmazonS3ReadOnlyAccess
-      - AmazonDynamoDBFullAccess
       Architectures:
       - x86_64
       Role:
@@ -171,8 +194,7 @@ Resources:
       CodeUri: StoringLambda
       Handler: Store.lambda_handler
       Runtime: python3.10
-      Policies:
-      - AmazonS3ReadOnlyAccess
+      Timeout: 15
       Architectures:
       - x86_64
       Role:
@@ -191,9 +213,6 @@ Resources:
       Handler: fetch_all_assesment.lambda_handler
       Runtime: python3.10
       CodeUri: FetchAllAssessmentsFunction
-      Policies:
-      - AWSLambdaBasicExecutionRole
-      - AmazonDynamoDBReadOnlyAccess
       Role:
         Fn::GetAtt:
         - MyLambdaExecutionRole
@@ -205,7 +224,7 @@ Resources:
             Path: /all_assessments
             Method: GET
             RestApiId:
-              Ref: FetchAllAssessmentAPI
+              Ref: APIGateWay
       Layers:
       - Fn::GetAtt:
         - AwsSamAutoDependencyLayerNestedStack
@@ -218,9 +237,6 @@ Resources:
       Handler: fetch_assesment.lambda_handler
       Runtime: python3.10
       CodeUri: FetchAssessmentFunction
-      Policies:
-      - AWSLambdaBasicExecutionRole
-      - AmazonDynamoDBReadOnlyAccess
       Role:
         Fn::GetAtt:
         - MyLambdaExecutionRole
@@ -232,31 +248,14 @@ Resources:
             Path: /assessment
             Method: GET
             RestApiId:
-              Ref: FetchAssessmentAPI
+              Ref: APIGateWay
       Layers:
       - Fn::GetAtt:
         - AwsSamAutoDependencyLayerNestedStack
         - Outputs.FetchAssessmentFunction9fd2cad4DepLayer
     Metadata:
       SamResourceId: FetchAssessmentFunction
-  FetchAllAssessmentAPI:
-    Type: AWS::Serverless::Api
-    Properties:
-      StageName: Prod
-      Auth:
-        DefaultAuthorizer: MyLambdaRequestAuthorizer
-        Authorizers:
-          MyLambdaRequestAuthorizer:
-            FunctionPayloadType: REQUEST
-            FunctionArn:
-              Fn::GetAtt:
-              - MyAuthFunction
-              - Arn
-            Identity:
-              Headers:
-              - authorizationToken
-              ReauthorizeEvery: 100
-  FetchAssessmentAPI:
+  APIGateWay:
     Type: AWS::Serverless::Api
     Properties:
       StageName: Prod
@@ -352,30 +351,13 @@ Resources:
             Path: /teacher
             Method: GET
             RestApiId:
-              Ref: TeacherSESAPI
+              Ref: APIGateWay
       Layers:
       - Fn::GetAtt:
         - AwsSamAutoDependencyLayerNestedStack
         - Outputs.TeacherSESLambdad5a7a537DepLayer
     Metadata:
       SamResourceId: TeacherSESLambda
-  TeacherSESAPI:
-    Type: AWS::Serverless::Api
-    Properties:
-      StageName: Prod
-      Auth:
-        DefaultAuthorizer: MyLambdaRequestAuthorizer
-        Authorizers:
-          MyLambdaRequestAuthorizer:
-            FunctionPayloadType: REQUEST
-            FunctionArn:
-              Fn::GetAtt:
-              - MyAuthFunction
-              - Arn
-            Identity:
-              Headers:
-              - authorizationToken
-              ReauthorizeEvery: 100
   ParentSESLambda:
     Type: AWS::Serverless::Function
     Properties:
@@ -395,30 +377,13 @@ Resources:
             Path: /parent
             Method: GET
             RestApiId:
-              Ref: ParentSESAPI
+              Ref: APIGateWay
       Layers:
       - Fn::GetAtt:
         - AwsSamAutoDependencyLayerNestedStack
         - Outputs.ParentSESLambda32fb7b40DepLayer
     Metadata:
       SamResourceId: ParentSESLambda
-  ParentSESAPI:
-    Type: AWS::Serverless::Api
-    Properties:
-      StageName: Prod
-      Auth:
-        DefaultAuthorizer: MyLambdaRequestAuthorizer
-        Authorizers:
-          MyLambdaRequestAuthorizer:
-            FunctionPayloadType: REQUEST
-            FunctionArn:
-              Fn::GetAtt:
-              - MyAuthFunction
-              - Arn
-            Identity:
-              Headers:
-              - authorizationToken
-              ReauthorizeEvery: 100
   MyLambdaSESExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -461,6 +426,19 @@ Resources:
             - dynamodb:PutItem
             - dynamodb:UpdateItem
             Resource: arn:aws:dynamodb:us-east-1:960351580303:table/Student_details
+  StudentsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Students
+      AttributeDefinitions:
+      - AttributeName: ID
+        AttributeType: S
+      KeySchema:
+      - AttributeName: ID
+        KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
   AwsSamAutoDependencyLayerNestedStack:
     DeletionPolicy: Delete
     Metadata:

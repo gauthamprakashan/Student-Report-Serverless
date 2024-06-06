@@ -12,15 +12,33 @@ from boto3.dynamodb.conditions import Key
 
 dynamodb = boto3.resource('dynamodb')
 ses_client = boto3.client('ses')
-table = dynamodb.Table('Student_details')
+table = dynamodb.Table('Students')
 s3_client = boto3.client('s3')
 
 
 def lambda_handler(event, context):
     try:
         #constants
-        ID = event['queryStringParameters']['ID']
-        parents_email = event['queryStringParameters']['parents_email']
+
+        if event.get('queryStringParameters') is None:
+            return {
+                'statusCode': 404,
+                'body': json.dumps({'error': 'No Parameter'})
+            }
+
+        #params = event['queryStringParameters']
+        
+        # Validate 'ID' parameter
+        if 'ID' in event['queryStringParameters']:
+            ID = event['queryStringParameters']['ID']
+        else:
+            return {
+                'statusCode': 404,
+                'body': json.dumps({'error': 'No ID Parameter'})
+            }
+        
+        
+        
         FROM_EMAIL = 'gautham.prakashan@antstack.io'
         subject = 'Assessment Details'
         
@@ -33,8 +51,22 @@ def lambda_handler(event, context):
         if 'Items' in response:
             
             item = response['Items'][0]
-            print(type(item))
-            assessments = {k: v for k, v in item.items() if k in assessments }
+            print(item)
+            #print(item['parents_contact_email_1'])
+            print("no")
+            
+            parents_email = item['parents_contact_email_1'] or item['parents_contact_email_2'] 
+            
+            
+            if parents_email == "":
+                return {
+                'statusCode': 404,
+                'body': json.dumps({'error': 'No Email in DB'})
+            }
+            
+            print(type(parents_email))
+
+            assessments = {k: v for k, v in item.items() if k in assessments and isinstance(v, dict) and v}
 
             flattened_data = []
 
@@ -57,7 +89,7 @@ def lambda_handler(event, context):
             msg = MIMEMultipart()
             msg['Subject'] = subject
             msg['From'] = FROM_EMAIL
-            msg['To'] = parents_email
+            msg['To'] = item['parents_contact_email_1'] or item['parents_contact_email_2']
 
             # Email body
             body = MIMEText('Please find childs Report Card details in the CSV file.', 'plain')
@@ -72,7 +104,7 @@ def lambda_handler(event, context):
 
             response = ses_client.send_raw_email(
                 Source=FROM_EMAIL,
-                Destinations=[event['queryStringParameters']['parents_email']],
+                Destinations=[parents_email],
                 RawMessage={
                     'Data': msg.as_string()
                 }

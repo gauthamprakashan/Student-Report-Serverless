@@ -8,7 +8,7 @@ def reformat_record(record, assessments):
     reformatted = {
         'ID': record['ID'],
         'Name': record['Name'],
-        'class': record['class'],
+        'Class': record['Class'],
         'DOB': record['DOB'],
     }
 
@@ -43,7 +43,7 @@ def lambda_handler(event, context):
         # Access data based on field names
         student_id = assessment_record.get('ID')
         student_name = assessment_record.get('Name')
-        student_class = assessment_record.get('class')
+        student_class = assessment_record.get('Class')
         if not student_id:
             print("Error: Student ID is missing in the assessment record.")
             continue  # Skip further validation if student ID is missing

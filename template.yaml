@@ -34,26 +34,21 @@ Resources:
       PolicyDocument:
         Version: '2012-10-17'
         Statement:
-          # - Effect: Allow
+          - Sid : AllowAccess
+            Effect: 'Allow'
+            Principal: '*'
+            Action: 's3:PutObject'
+            Resource: !Sub ${PresignS3.Arn}/*
+
+          # - Effect: 'Deny'
           #   Principal: '*'
-          #   Action: 's3:GetObject'
-          #   Resource: !Sub 'arn:aws:s3:::PresignS3-${AWS::AccountId}/*'
+          #   Action: 's3:PutObject'
+          #   Resource: !Sub ${PresignS3.Arn}/*
+          #   Condition:
+          #     StringNotLike:
+          #       's3:suffix': '*.csv'
 
-          - Effect: 'Allow'
-            Principal: '*'
-            Action: 's3:PutObject'
-            Resource: !Sub 'arn:aws:s3:::PresignS3-${AWS::AccountId}/*'
-            Condition:
-              StringLike:
-                's3:suffix': '*.csv'
-
-          - Effect: 'Deny'
-            Principal: '*'
-            Action: 's3:PutObject'
-            Resource: !Sub 'arn:aws:s3:::PresignS3-${AWS::AccountId}/*'
-            Condition:
-              StringNotLike:
-                's3:suffix': '*.csv'
+          
 
   #Lambda IAM role for all the 4 lambda states
   MyLambdaExecutionRole:
@@ -88,7 +83,7 @@ Resources:
                   - dynamodb:Scan
                   - dynamodb:PutItem
                   - dynamodb:UpdateItem
-                Resource: arn:aws:dynamodb:us-east-1:960351580303:table/Student_details
+                Resource: !Sub ${StudentsTable.Arn}
 
   TriggerS3Lambda:
     Type: 'AWS::Serverless::Function'
@@ -110,6 +105,25 @@ Resources:
           Properties:
             Bucket: !Ref PresignS3
             Events: s3:ObjectCreated:*
+      
+  UploadCSVLambda:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: api/
+      Handler: load.lambda_handler
+      Runtime: python3.10
+      Architectures:
+      - x86_64
+      Environment:
+        Variables:
+          BUCKET_NAME: !Ref PresignS3
+      Events:
+        UplaodCSVApi:
+          Type: Api
+          Properties:
+            Path: /upload
+            Method: GET
+            RestApiId: !Ref APIGateWay
       
 
   #Validates the data: State 1
@@ -183,7 +197,7 @@ Resources:
           Properties:
             Path: /all_assessments
             Method: GET
-            RestApiId: !Ref FetchAllAssessmentAPI
+            RestApiId: !Ref APIGateWay
 
   FetchAssessmentFunction:
     Type: 'AWS::Serverless::Function'
@@ -202,10 +216,10 @@ Resources:
           Properties:
             Path: /assessment
             Method: GET
-            RestApiId: !Ref FetchAssessmentAPI
+            RestApiId: !Ref APIGateWay
             
 
-  FetchAllAssessmentAPI:
+  APIGateWay:
     Type: AWS::Serverless::Api
     Properties:
       StageName: Prod
@@ -220,21 +234,22 @@ Resources:
                 - authorizationToken
               ReauthorizeEvery: 100
 
-  FetchAssessmentAPI:
-    Type: AWS::Serverless::Api
-    Properties:
-      StageName: Prod
-      Auth:
-        DefaultAuthorizer: MyLambdaRequestAuthorizer
-        Authorizers: 
-          MyLambdaRequestAuthorizer:
-            FunctionPayloadType: REQUEST
-            FunctionArn: !GetAtt MyAuthFunction.Arn
-            Identity:
-              Headers:
-                - authorizationToken
-              ReauthorizeEvery: 100
+  # FetchAssessmentAPI:
+  #   Type: AWS::Serverless::Api
+  #   Properties:
+  #     StageName: Prod
+  #     Auth:
+  #       DefaultAuthorizer: MyLambdaRequestAuthorizer
+  #       Authorizers: 
+  #         MyLambdaRequestAuthorizer:
+  #           FunctionPayloadType: REQUEST
+  #           FunctionArn: !GetAtt MyAuthFunction.Arn
+  #           Identity:
+  #             Headers:
+  #               - authorizationToken
+  #             ReauthorizeEvery: 100
   #Lambda Custom Authoriser for the all the API's
+
   MyAuthFunction:
     Type: 'AWS::Serverless::Function'
     Properties:
@@ -346,24 +361,25 @@ Resources:
           Properties:
             Path: /teacher
             Method: GET
-            RestApiId: !Ref TeacherSESAPI
+            RestApiId: !Ref APIGateWay
   
-  TeacherSESAPI:
-    Type: AWS::Serverless::Api
-    Properties:
-      StageName: Prod
-      Auth:
-        DefaultAuthorizer: MyLambdaRequestAuthorizer
-        Authorizers: 
-          MyLambdaRequestAuthorizer:
-            FunctionPayloadType: REQUEST
-            FunctionArn: !GetAtt MyAuthFunction.Arn
-            Identity:
-              Headers:
-                - authorizationToken
-              ReauthorizeEvery: 100
+  # TeacherSESAPI:
+  #   Type: AWS::Serverless::Api
+  #   Properties:
+  #     StageName: Prod
+  #     Auth:
+  #       DefaultAuthorizer: MyLambdaRequestAuthorizer
+  #       Authorizers: 
+  #         MyLambdaRequestAuthorizer:
+  #           FunctionPayloadType: REQUEST
+  #           FunctionArn: !GetAtt MyAuthFunction.Arn
+  #           Identity:
+  #             Headers:
+  #               - authorizationToken
+  #             ReauthorizeEvery: 100
 
   #Send email to parents of childs report
+
   ParentSESLambda:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
@@ -380,22 +396,22 @@ Resources:
           Properties:
             Path: /parent
             Method: GET
-            RestApiId: !Ref ParentSESAPI
+            RestApiId: !Ref APIGateWay
 
-  ParentSESAPI:
-    Type: AWS::Serverless::Api
-    Properties:
-      StageName: Prod
-      Auth:
-        DefaultAuthorizer: MyLambdaRequestAuthorizer
-        Authorizers: 
-          MyLambdaRequestAuthorizer:
-            FunctionPayloadType: REQUEST
-            FunctionArn: !GetAtt MyAuthFunction.Arn
-            Identity:
-              Headers:
-                - authorizationToken
-              ReauthorizeEvery: 100
+  # ParentSESAPI:
+  #   Type: AWS::Serverless::Api
+  #   Properties:
+  #     StageName: Prod
+  #     Auth:
+  #       DefaultAuthorizer: MyLambdaRequestAuthorizer
+  #       Authorizers: 
+  #         MyLambdaRequestAuthorizer:
+  #           FunctionPayloadType: REQUEST
+  #           FunctionArn: !GetAtt MyAuthFunction.Arn
+  #           Identity:
+  #             Headers:
+  #               - authorizationToken
+  #             ReauthorizeEvery: 100
   #Lambda IAM Role for Mail APIs
   MyLambdaSESExecutionRole:
     Type: AWS::IAM::Role
@@ -438,20 +454,36 @@ Resources:
                   - dynamodb:Scan
                   - dynamodb:PutItem
                   - dynamodb:UpdateItem
-                Resource: arn:aws:dynamodb:us-east-1:960351580303:table/Student_details
-Outputs:
-  ParentSESApiUrl:
-    Description: "API to notify Parent's about the Report "
-    Value: !Sub "https://${ParentSESAPI}.execute-api.${AWS::Region}.amazonaws.com/Prod/parent"
-  TeacherSESApiUrl:
-    Description: "API to notify Teacher's about the Report "
-    Value: !Sub "https://${TeacherSESAPI}.execute-api.${AWS::Region}.amazonaws.com/Prod/teacher/"
-  FetchAssessmentApiUrl:
-    Description: "API to fetch assessment details "
-    Value: !Sub "https://${FetchAssessmentAPI}.execute-api.${AWS::Region}.amazonaws.com/Prod/assessment"  # Replace with actual path
-  FetchAllAssessmentApiUrl:
-    Description: "API to fetch all assessment details "
-    Value: !Sub "https://${FetchAllAssessmentAPI}.execute-api.${AWS::Region}.amazonaws.com/Prod/all_assessments"  
+                Resource: !Sub ${StudentsTable.Arn}
+
+  StudentsTable:
+    Type: 'AWS::DynamoDB::Table'
+    Properties:
+      TableName: 'Students'
+      AttributeDefinitions:
+        - AttributeName: 'ID'
+          AttributeType: 'S'
+      KeySchema:
+        - AttributeName: 'ID'
+          KeyType: 'HASH'
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+
+
+# Outputs:
+#   ParentSESApiUrl:
+#     Description: "API to notify Parent's about the Report "
+#     Value: !Sub "https://${ParentSESAPI}.execute-api.${AWS::Region}.amazonaws.com/Prod/parent"
+#   TeacherSESApiUrl:
+#     Description: "API to notify Teacher's about the Report "
+#     Value: !Sub "https://${TeacherSESAPI}.execute-api.${AWS::Region}.amazonaws.com/Prod/teacher/"
+#   FetchAssessmentApiUrl:
+#     Description: "API to fetch assessment details "
+#     Value: !Sub "https://${FetchAssessmentAPI}.execute-api.${AWS::Region}.amazonaws.com/Prod/assessment"  # Replace with actual path
+#   FetchAllAssessmentApiUrl:
+#     Description: "API to fetch all assessment details "
+#     Value: !Sub "https://${FetchAllAssessmentAPI}.execute-api.${AWS::Region}.amazonaws.com/Prod/all_assessments"  
 
 
 #   ApiUrl:

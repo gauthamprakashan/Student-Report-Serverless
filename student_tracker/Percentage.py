@@ -4,7 +4,7 @@ import boto3
 s3_client = boto3.client('s3')
 
 dynamodb_client = boto3.resource('dynamodb')
-table = dynamodb_client.Table('Student_details')
+table = dynamodb_client.Table('Students')
 
 MAX_MARKS = 600
 def lambda_handler(event, context):

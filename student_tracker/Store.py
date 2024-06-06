@@ -1,7 +1,7 @@
 import boto3
 from decimal import Decimal
 dynamodb_client = boto3.resource('dynamodb')
-table = dynamodb_client.Table('Student_details')
+table = dynamodb_client.Table('Students')
 
 def lambda_handler(event, context):
     

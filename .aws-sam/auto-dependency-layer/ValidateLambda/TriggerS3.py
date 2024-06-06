@@ -1,7 +1,6 @@
 import os
 import json
 import boto3
-import os
 
 s3_client = boto3.client('s3')
 my_state_machine_arn = os.environ['STATE_MACHINE_ARN']

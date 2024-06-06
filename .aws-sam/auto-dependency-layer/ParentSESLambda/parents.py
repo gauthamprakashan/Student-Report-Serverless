@@ -19,26 +19,39 @@ s3_client = boto3.client('s3')
 def lambda_handler(event, context):
     try:
         #constants
+
+        if 'queryStringParameters' not in event:
+            raise ValueError("Missing query string parameters")
+
+        #params = event['queryStringParameters']
+        
+        # Validate 'ID' parameter
         ID = event['queryStringParameters']['ID']
-        teachers_email = event['queryStringParameters']['teachers_email']
+        if not ID:
+            raise ValueError("Missing 'ID' parameter")
+        
+        
+        
         FROM_EMAIL = 'gautham.prakashan@antstack.io'
-        csv_file_key = 'report.csv'
         subject = 'Assessment Details'
         
         # Retrieve the object data from DynamoDB
         expr = boto3.dynamodb.conditions.Key('ID').eq(ID)
-        assessments = ["Finalexam","Assement1","Assement2","Assement5","Assement6","mid-term","Assement3","Assement4"]
+        assessments = ["Finalexam","Assement1","Assement2","Assement5","Assement6","Midterm","Assement3","Assement4"]
         response = table.scan(FilterExpression=expr)
         print(response)
        
         if 'Items' in response:
             
             item = response['Items'][0]
-            print(type(item))
-            #retrive parents_email with get_item
-            assessments = {k: v for k, v in item.items() if k in assessments }
+            print(item)
+            parents_email = item['parents_contact_email_1'] or item['parents_contact_email_2']
+            print(type(parents_email))
+            assessments = {k: v for k, v in item.items() if k in assessments and isinstance(v, dict) and v}
 
             flattened_data = []
+
+            #Access data and flatten it from retrieved response from DynamoDB
             for assessment_name, scores in assessments.items():
                 row = {'Assessment': assessment_name}
                 row.update(scores)
@@ -51,17 +64,16 @@ def lambda_handler(event, context):
             
             csv_file_content = csv_file.getvalue()
     
-            # Upload the CSV file to S3
-            #s3_client.put_object(Body=csv_file_content, Bucket=bucket_name, Key=csv_file_key)
             
-
+            
+#           #Creating raw email in SES to send attachments
             msg = MIMEMultipart()
             msg['Subject'] = subject
             msg['From'] = FROM_EMAIL
-            msg['To'] = event['queryStringParameters']['parents_email']
+            msg['To'] = item['parents_contact_email_1'] or item['parents_contact_email_2']
 
             # Email body
-            body = MIMEText('Please find the Classes Report Card details in the CSV file.', 'plain')
+            body = MIMEText('Please find childs Report Card details in the CSV file.', 'plain')
             msg.attach(body)
 
             # Attach the CSV file
@@ -73,7 +85,7 @@ def lambda_handler(event, context):
 
             response = ses_client.send_raw_email(
                 Source=FROM_EMAIL,
-                Destinations=[event['queryStringParameters']['parents_email']],
+                Destinations=[parents_email],
                 RawMessage={
                     'Data': msg.as_string()
                 }
@@ -91,7 +103,6 @@ def lambda_handler(event, context):
             }
     
         
-        # Send email to teachers
         
 
     except Exception as e:

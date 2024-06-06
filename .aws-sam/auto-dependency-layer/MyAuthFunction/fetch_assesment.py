@@ -1,5 +1,5 @@
 import boto3
-import simplejson as json
+import simplejson as json  #use simplejson to to convert Decimal type into JSON
 from boto3.dynamodb.conditions import Key
 
 dynamodb = boto3.resource('dynamodb')
@@ -7,7 +7,18 @@ table = dynamodb.Table('Student_details')
 
 def lambda_handler(event, context):
     print(event)
+    if 'queryStringParameters' not in event:
+        raise ValueError("Missing query string parameters")
+
+    params = event['queryStringParameters']
+        
+    # Validate 'ID' parameter
     student_id = event['queryStringParameters']['ID']
+    if not ID:
+        raise ValueError("Missing 'ID' parameter")
+    #student_id = event['queryStringParameters']['ID']
+    if not assessment_name:
+        raise ValueError("Missing 'assessment' parameter")
     assessment_name = event['queryStringParameters']['assessment']
     
     try:
