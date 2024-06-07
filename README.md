@@ -1,4 +1,3 @@
-## Note: All the emails were sent from mail identity gautham.prakashan@antstack.io. I think the account has been deactivated. So you may not recieve the mails on execution of mail APIs. You can replace the FROM_EMAIL constant to update.
 
 
 # student-tracker
@@ -44,9 +43,7 @@ Link to the Deployed Application: https://us-east-1.console.aws.amazon.com/cloud
 
 
 
-Do let me know if you have any other queries.
 
-Contact: itsgauthamp@gmail.com
 
 
 
